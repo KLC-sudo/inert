@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: pdia
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 24
+    disk:
+      name: pdia-data
+      mountPath: /data
+      sizeGB: 1
