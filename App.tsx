@@ -170,6 +170,19 @@ const AppContent: React.FC = () => {
           </svg>
         </button>
       )}
+      {/* ── Mobile FAB: Let's Talk ── only visible on mobile, hidden when on onboarding */}
+      {currentPage !== 'onboarding' && (
+        <button
+          onClick={() => navigate('onboarding')}
+          className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 relative flex items-center gap-2 bg-primary text-slate-900 font-black px-7 py-3.5 rounded-full shadow-[0_8px_30px_rgba(0,229,255,0.4)] hover:shadow-[0_8px_40px_rgba(0,229,255,0.6)] hover:scale-105 active:scale-95 transition-all duration-200 overflow-hidden"
+          aria-label="Start a project"
+        >
+          <span className="material-icons text-[18px]">chat_bubble_outline</span>
+          Let's Talk
+          {/* Subtle pulse ring */}
+          <span className="absolute inset-0 rounded-full ring-2 ring-primary/40 animate-ping pointer-events-none" />
+        </button>
+      )}
     </div>
   );
 };

@@ -77,7 +77,7 @@ Please get back to me!`;
                     <div className="grid md:grid-cols-[1fr_1.5fr] h-full min-h-[500px]">
 
                         {/* Left Info Panel */}
-                        <div className="p-10 md:p-14 flex flex-col justify-between bg-white border-r border-slate-100">
+                        <div className="p-6 sm:p-10 md:p-14 flex flex-col justify-between bg-white border-r border-slate-100">
                             <div>
                                 {/* Step Indicators */}
                                 <div className="flex space-x-2.5 mb-10">
@@ -150,7 +150,7 @@ Please get back to me!`;
                         </div>
 
                         {/* Right Interactive Panel */}
-                        <div className="p-10 md:p-14 relative bg-white flex flex-col justify-center">
+                        <div className="p-6 sm:p-10 md:p-14 relative bg-white flex flex-col justify-center">
                             {/* Subtle Grid Background */}
                             <div className="absolute inset-0 bg-[#f8fafc] [mask-image:linear-gradient(to_bottom,white_40%,transparent)] pointer-events-none">
                                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#slate-200_1px,transparent_1px),linear-gradient(to_bottom,#slate-200_1px,transparent_1px)] bg-[size:32px_32px] opacity-20"></div>
@@ -208,19 +208,19 @@ Please get back to me!`;
                                         </div>
                                         <div>
                                             <label className="block text-sm font-bold text-slate-900 mb-2">Estimated Budget *</label>
-                                            <div className="flex gap-2">
+                                            <div className="flex flex-col min-[420px]:flex-row gap-2">
                                                 <select
                                                     value={currency}
                                                     onChange={(e) => setCurrency(e.target.value)}
-                                                    className="px-4 py-4 rounded-xl border-2 border-slate-100 bg-slate-50 focus:bg-white focus:border-primary focus:outline-none transition-all font-bold text-slate-900 cursor-pointer"
+                                                    className="w-full min-[420px]:w-auto px-3 py-3 rounded-xl border-2 border-slate-100 bg-slate-50 focus:bg-white focus:border-primary focus:outline-none transition-all font-bold text-slate-900 cursor-pointer text-sm"
                                                 >
-                                                    <option value="USD">USD</option>
+                                                    <option value="USD">USD $</option>
                                                     <option value="UGX">UGX</option>
                                                     <option value="KSH">KSH</option>
                                                     <option value="TSH">TSH</option>
                                                     <option value="RWF">RWF</option>
-                                                    <option value="EUR">EUR</option>
-                                                    <option value="GBP">GBP</option>
+                                                    <option value="EUR">EUR €</option>
+                                                    <option value="GBP">GBP £</option>
                                                 </select>
                                                 <input
                                                     type="number"
@@ -228,7 +228,7 @@ Please get back to me!`;
                                                     min="0"
                                                     onChange={(e) => setBudget(e.target.value)}
                                                     placeholder="e.g. 5000"
-                                                    className="flex-1 px-5 py-4 rounded-xl border-2 border-slate-100 bg-slate-50 focus:bg-white focus:border-primary focus:outline-none transition-all font-medium text-slate-900"
+                                                    className="flex-1 px-4 py-3 rounded-xl border-2 border-slate-100 bg-slate-50 focus:bg-white focus:border-primary focus:outline-none transition-all font-medium text-slate-900 text-sm"
                                                 />
                                             </div>
                                         </div>
@@ -238,14 +238,14 @@ Please get back to me!`;
                                                 type="date"
                                                 value={timeline}
                                                 onChange={(e) => setTimeline(e.target.value)}
-                                                className="w-full px-5 py-4 rounded-xl border-2 border-slate-100 bg-slate-50 focus:bg-white focus:border-primary focus:outline-none transition-all font-medium text-slate-900"
+                                                className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 bg-slate-50 focus:bg-white focus:border-primary focus:outline-none transition-all font-medium text-slate-900 text-sm"
                                             />
                                         </div>
-                                        <div className="mt-8 flex justify-end">
+                                        <div className="mt-6 flex justify-end">
                                             <button
                                                 onClick={() => setStep(3)}
                                                 disabled={!isStep2Valid}
-                                                className={`font-bold px-8 py-3.5 rounded-full flex items-center gap-2 transition-all shadow-xl ${isStep2Valid ? 'bg-primary text-slate-900 hover:scale-105 shadow-primary/20' : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'}`}
+                                                className={`w-full sm:w-auto font-bold px-6 py-3 rounded-full flex items-center justify-center gap-2 transition-all shadow-xl text-sm ${isStep2Valid ? 'bg-primary text-slate-900 hover:scale-105 shadow-primary/20' : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'}`}
                                             >
                                                 Next Step
                                                 <span className="material-icons text-sm">arrow_forward</span>
