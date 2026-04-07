@@ -1,7 +1,8 @@
 import express from 'express';
 import multer from 'multer';
+import sharp from 'sharp';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { dirname, join, basename, extname } from 'path';
 import fs from 'fs';
 import cookieParser from 'cookie-parser';
 import { logVisitor, getAnalyticsStats } from './analytics.js';
@@ -55,14 +56,21 @@ const storage = multer.diskStorage({
     },
     filename: (req, file, cb) => {
         const filename = req.query.filename || file.originalname;
-        console.log('Multer saving file as:', filename);
         cb(null, filename);
     }
 });
 
+// Accept up to 10MB raw (sharp will compress to <500KB typically)
 const upload = multer({
     storage,
-    limits: { fileSize: 50 * 1024 * 1024 }
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed'), false);
+        }
+    }
 });
 
 // --- API ROUTES (Strictly before static files) ---
@@ -78,30 +86,46 @@ app.get('/api/debug', (req, res) => {
     });
 });
 
-// Upload Endpoint (protected)
 app.post('/api/upload', requireAuth, (req, res, next) => {
-    console.log('=== UPLOAD REQUEST START ===');
-    console.log('Query params:', req.query);
-    console.log('Content-Type:', req.headers['content-type']);
-    console.log('Content-Length:', req.headers['content-length']);
-
     const uploadSingle = upload.single('file');
 
-    uploadSingle(req, res, (err) => {
+    uploadSingle(req, res, async (err) => {
         if (err) {
-            console.error('Multer upload error:', err);
-            return res.status(500).json({ error: 'Upload middleware failed: ' + err.message });
+            const msg = err.code === 'LIMIT_FILE_SIZE'
+                ? 'File too large. Maximum upload size is 10MB.'
+                : err.message || 'Upload failed';
+            return res.status(400).json({ error: msg });
         }
 
         if (!req.file) {
-            console.error('No file in request. Body:', req.body);
             return res.status(400).json({ error: 'No file uploaded' });
         }
 
-        console.log(`Upload successful: ${req.file.filename} (${req.file.size} bytes)`);
-        console.log('=== UPLOAD REQUEST END ===');
+        try {
+            const rawPath = req.file.path;
+            const nameBase = basename(req.file.filename, extname(req.file.filename));
+            const outFilename = `${nameBase}.webp`;
+            const outPath = join(uploadsDir, outFilename);
 
-        res.json({ url: `/uploads/${req.file.filename}` });
+            // Compress: resize to max 1200px wide, convert to WebP 80% quality
+            await sharp(rawPath)
+                .resize({ width: 1200, withoutEnlargement: true })
+                .webp({ quality: 80 })
+                .toFile(outPath);
+
+            // Remove original raw file if different from output
+            if (rawPath !== outPath) {
+                fs.unlink(rawPath, () => {});
+            }
+
+            const sizeKB = Math.round(fs.statSync(outPath).size / 1024);
+            console.log(`Upload compressed: ${outFilename} (${sizeKB}KB)`);
+            res.json({ url: `/uploads/${outFilename}` });
+        } catch (sharpErr) {
+            console.error('Compression error:', sharpErr);
+            // Fall back to serving the raw file if sharp fails
+            res.json({ url: `/uploads/${req.file.filename}` });
+        }
     });
 });
 
