@@ -68,10 +68,9 @@ const PortfolioSection: React.FC = () => {
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {(content.portfolioItems || []).map((item, idx) => {
-                        // Combine main image + additional images into one array for the carousel
                         const allImages = [item.image, ...(item.additionalImages || [])].filter(Boolean) as string[];
                         return (
-                            <div key={idx} className={`group relative aspect-[4/5] overflow-hidden rounded-3xl bg-white dark:bg-slate-800 shadow-sm ${idx === 2 ? 'lg:col-span-1 md:col-span-2 lg:aspect-auto lg:h-full' : ''}`}>
+                            <div key={idx} className="group relative aspect-[4/3] overflow-hidden rounded-3xl bg-slate-100 dark:bg-slate-800 shadow-sm">
                                 <PortfolioCarousel images={allImages} title={item.title} />
                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-8 pointer-events-none">
                                     <span className="text-primary font-bold text-xs uppercase tracking-widest mb-2">{item.category}</span>
