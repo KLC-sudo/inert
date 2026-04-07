@@ -52,9 +52,9 @@ const ContactFooter: React.FC<{ onNavigate?: (page: string) => void }> = ({ onNa
                     <div className="flex flex-col items-center md:items-start gap-4">
                         <img
                             alt={content.branding.brandName || "Inertia Studio"}
-                            className="h-8 w-auto"
+                            className="w-auto object-contain"
                             src={content.branding.logoBottom}
-                            style={{ maxHeight: `${content.branding.logoBottomSize || 32}px` }}
+                            style={{ height: `${content.branding.logoBottomSize || 32}px` }}
                         />
                         <p className="text-slate-500 dark:text-slate-500 text-sm">© {new Date().getFullYear()} {content.branding.brandName || "Inertia Studio"}. All rights reserved.</p>
                     </div>

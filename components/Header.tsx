@@ -39,9 +39,9 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage }) => {
         >
           <img
             alt={content.branding.brandName || "Inertia Studio Logo"}
-            className="h-10 w-auto object-contain"
+            className="w-auto object-contain"
             src={content.branding.logoTop}
-            style={{ maxHeight: `${content.branding.logoTopSize || 40}px` }}
+            style={{ height: `${content.branding.logoTopSize || 40}px` }}
           />
         </button>
 
