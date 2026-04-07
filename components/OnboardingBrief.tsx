@@ -160,14 +160,14 @@ Please get back to me!`;
                                 {step === 1 && (
                                     <div className="animate-in fade-in slide-in-from-right-4 duration-500">
                                         <h4 className="text-xl font-bold text-slate-900 mb-6">What do you need help with?</h4>
-                                        <div className="grid sm:grid-cols-2 gap-4">
+                                        <div className="grid sm:grid-cols-2 gap-4 p-4">
                                             {services.map((service) => (
                                                 <button
                                                     key={service.id}
                                                     onClick={() => toggleService(service.id)}
-                                                    className={`p-5 text-left rounded-[1.5rem] border-2 transition-all duration-300 bg-white group hover:shadow-lg ${selectedServices.includes(service.id)
-                                                        ? 'border-slate-900 shadow-[0_5px_15px_rgba(0,0,0,0.08)] scale-[1.02]'
-                                                        : 'border-slate-100 hover:border-slate-200'
+                                                    className={`p-5 text-left rounded-[1.5rem] border-2 transition-all duration-300 bg-white group hover:shadow-lg relative ${selectedServices.includes(service.id)
+                                                        ? 'border-slate-900 ring-1 ring-slate-900 shadow-[0_5px_15px_rgba(0,0,0,0.08)] scale-[1.02] z-20'
+                                                        : 'border-slate-100 hover:border-slate-200 z-10'
                                                         }`}
                                                 >
                                                     <div className="flex justify-between items-start mb-3">
@@ -185,7 +185,7 @@ Please get back to me!`;
                                                 </button>
                                             ))}
                                         </div>
-                                        <div className={`mt-8 transition-all duration-500 overflow-hidden flex justify-end ${selectedServices.length > 0 ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                        <div className={`mt-12 transition-all duration-500 flex justify-end ${selectedServices.length > 0 ? 'opacity-100' : 'opacity-0 h-0 pointer-events-none overflow-hidden'}`}>
                                             <button onClick={() => setStep(2)} className="bg-primary text-slate-900 font-bold px-8 py-3.5 rounded-full flex items-center gap-2 hover:scale-105 transition-transform shadow-lg shadow-primary/20">
                                                 Next Step
                                                 <span className="material-icons text-sm">arrow_forward</span>
@@ -345,21 +345,7 @@ Please get back to me!`;
                     </div>
                 </div>
 
-                {/* Footer Trust Indicators */}
-                <div className="flex flex-wrap justify-center gap-8 md:gap-16 mt-14 px-6 relative z-10">
-                    <div className="flex items-center gap-2.5 text-slate-400 font-bold text-sm tracking-wide">
-                        <span className="material-icons text-[18px]">verified</span> Fast Turnaround
-                    </div>
-                    <div className="flex items-center gap-2.5 text-slate-400 font-bold text-sm tracking-wide">
-                        <span className="material-icons text-[18px]">star</span> Award Winning
-                    </div>
-                    <div className="flex items-center gap-2.5 text-slate-400 font-bold text-sm tracking-wide">
-                        <span className="material-icons text-[18px]">auto_fix_high</span> Custom Motion
-                    </div>
-                    <div className="flex items-center gap-2.5 text-slate-400 font-bold text-sm tracking-wide">
-                        <span className="material-icons text-[18px]">schema</span> Full Dev Ops
-                    </div>
-                </div>
+
             </div>
 
             {/* Background ambient glows matching reference */}
