@@ -36,12 +36,22 @@ const HomePage: React.FC<{ onNavigate: (page: Page) => void }> = ({ onNavigate }
 
 const AppContent: React.FC = () => {
   const { isAdmin, setIsAdmin } = useContent();
-  const [currentPage, setCurrentPage] = useState<Page>('home');
   const [clickCount, setClickCount] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
   const [showLogin, setShowLogin] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
+
+  // Map URL paths to page keys
+  const pathToPage = (path: string): Page => {
+    const p = path.replace(/^\//, '').toLowerCase();
+    if (p === 'about') return 'about';
+    if (p === 'contact') return 'contact';
+    if (p === 'onboarding' || p === 'brief') return 'onboarding';
+    return 'home';
+  };
+
+  const [currentPage, setCurrentPage] = useState<Page>(() => pathToPage(window.location.pathname));
 
   useEffect(() => {
     checkAuth();
@@ -101,9 +111,27 @@ const AppContent: React.FC = () => {
   };
 
   const navigate = (page: string) => {
-    setCurrentPage(page as Page);
+    const p = page as Page;
+    const pathMap: Record<Page, string> = {
+      home: '/',
+      about: '/about',
+      contact: '/contact',
+      onboarding: '/onboarding',
+    };
+    history.pushState({ page: p }, '', pathMap[p] || '/');
+    setCurrentPage(p);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Handle browser back/forward
+  useEffect(() => {
+    const onPop = (e: PopStateEvent) => {
+      setCurrentPage(e.state?.page ?? pathToPage(window.location.pathname));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
   if (showLogin && !isAuthenticated) return <LoginPage onLoginSuccess={handleLoginSuccess} />;
   if (isAdmin && isAuthenticated) return <AdminDashboard onLogout={handleLogout} />;

@@ -11,6 +11,7 @@ interface LightboxProps {
 
 const Lightbox: React.FC<LightboxProps> = ({ images, startIndex, title, onClose }) => {
     const [idx, setIdx] = useState(startIndex);
+    const touchStartX = React.useRef<number | null>(null);
 
     const prev = useCallback(() => setIdx(i => (i - 1 + images.length) % images.length), [images.length]);
     const next = useCallback(() => setIdx(i => (i + 1) % images.length), [images.length]);
@@ -30,10 +31,23 @@ const Lightbox: React.FC<LightboxProps> = ({ images, startIndex, title, onClose 
         return () => { document.body.style.overflow = ''; };
     }, []);
 
+    const onTouchStart = (e: React.TouchEvent) => {
+        touchStartX.current = e.touches[0].clientX;
+    };
+    const onTouchEnd = (e: React.TouchEvent) => {
+        if (touchStartX.current === null) return;
+        const dx = e.changedTouches[0].clientX - touchStartX.current;
+        if (Math.abs(dx) > 40) { dx < 0 ? next() : prev(); }
+        else if (Math.abs(dx) < 8) { onClose(); }
+        touchStartX.current = null;
+    };
+
     return (
         <div
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm"
             onClick={onClose}
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
         >
             <button
                 onClick={onClose}
@@ -89,7 +103,7 @@ const Lightbox: React.FC<LightboxProps> = ({ images, startIndex, title, onClose 
     );
 };
 
-/* ─── Card Carousel (arrows hidden until hover) ──────────────────────────────── */
+/* ─── Card Carousel (swipe + hover-aware arrows) ────────────────────────────── */
 const PortfolioCarousel: React.FC<{
     images: string[];
     title: string;
@@ -97,50 +111,66 @@ const PortfolioCarousel: React.FC<{
 }> = ({ images, title, onExpand }) => {
     const [current, setCurrent] = useState(0);
     const [hovered, setHovered] = useState(false);
+    const touchStartX = React.useRef<number | null>(null);
+    const isTouchDevice = React.useRef(window.matchMedia('(hover: none)').matches);
 
     if (images.length === 0) return null;
 
-    const prev = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        setCurrent(c => (c - 1 + images.length) % images.length);
+    const goPrev = () => setCurrent(c => (c - 1 + images.length) % images.length);
+    const goNext = () => setCurrent(c => (c + 1) % images.length);
+    const prev = (e: React.MouseEvent) => { e.stopPropagation(); goPrev(); };
+    const next = (e: React.MouseEvent) => { e.stopPropagation(); goNext(); };
+
+    const onTouchStart = (e: React.TouchEvent) => {
+        touchStartX.current = e.touches[0].clientX;
     };
-    const next = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        setCurrent(c => (c + 1) % images.length);
+    const onTouchEnd = (e: React.TouchEvent) => {
+        if (touchStartX.current === null) return;
+        const dx = e.changedTouches[0].clientX - touchStartX.current;
+        if (Math.abs(dx) > 40) {
+            dx < 0 ? goNext() : goPrev();
+        } else if (Math.abs(dx) < 8) {
+            onExpand(current);
+        }
+        touchStartX.current = null;
     };
+
+    const showControls = hovered || isTouchDevice.current;
 
     return (
         <div
             className="w-full h-full relative select-none cursor-zoom-in"
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
-            onClick={() => onExpand(current)}
+            onClick={() => !isTouchDevice.current && onExpand(current)}
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
         >
             <img
                 src={images[current]}
                 alt={`${title} – ${current + 1}`}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none"
             />
 
-            {/* Expand hint — hover only */}
-            <div className={`absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 flex items-center justify-center transition-opacity z-10 ${hovered ? 'opacity-100' : 'opacity-0'}`}>
-                <span className="text-white text-sm leading-none">⤢</span>
+            {/* Expand hint */}
+            <div className={`absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center transition-opacity z-10 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
+                <span className="text-white text-base leading-none">⤢</span>
             </div>
 
-            {/* Carousel nav — only when hovered AND multiple images */}
+            {/* Carousel nav — always visible on touch, hover-triggered on desktop */}
             {images.length > 1 && (
                 <>
                     <button
                         onClick={prev}
-                        className={`absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg z-10 transition-all duration-200 ${hovered ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2 pointer-events-none'}`}
+                        className={`absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full w-9 h-9 flex items-center justify-center text-xl z-10 transition-all duration-200 shadow-md ${showControls ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2 pointer-events-none'}`}
                         aria-label="Previous image"
                     >‹</button>
                     <button
                         onClick={next}
-                        className={`absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg z-10 transition-all duration-200 ${hovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2 pointer-events-none'}`}
+                        className={`absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full w-9 h-9 flex items-center justify-center text-xl z-10 transition-all duration-200 shadow-md ${showControls ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2 pointer-events-none'}`}
                         aria-label="Next image"
                     >›</button>
-                    {/* Dots always subtle at bottom */}
+                    {/* Dots */}
                     <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
                         {images.map((_, i) => (
                             <button
