@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useContent } from '../../ContentContext';
 
 const ImageUpload: React.FC<{
@@ -41,7 +41,7 @@ const ImageUpload: React.FC<{
                             className="h-20 w-20 object-contain border-2 border-green-500 rounded bg-gray-50 p-1"
                         />
                         <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
-                            ✓
+                            Γ£ô
                         </div>
                     </div>
                 )}
@@ -61,7 +61,7 @@ const ImageUpload: React.FC<{
                         {uploading ? 'Uploading...' : currentImage ? 'Change Image' : 'Choose Image'}
                     </label>
                     {currentImage && (
-                        <span className="text-xs text-green-600 font-medium">✓ Image uploaded</span>
+                        <span className="text-xs text-green-600 font-medium">Γ£ô Image uploaded</span>
                     )}
                 </div>
             </div>
@@ -74,97 +74,25 @@ const AdminDashboard: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
     const [activeTab, setActiveTab] = useState('branding');
     const [analytics, setAnalytics] = useState<any>(null);
     const [loadingAnalytics, setLoadingAnalytics] = useState(false);
-    const [securityData, setSecurityData] = useState<any>(null);
-    const [loadingSecurity, setLoadingSecurity] = useState(false);
-    
-    // Fetch analytics when analytics tab is opened or filters change
-    const [dateRange, setDateRange] = useState({ start: '', end: '' });
-    const [preset, setPreset] = useState('all');
-    const [pageNumber, setPageNumber] = useState(1);
-    const [showThreatsOnly, setShowThreatsOnly] = useState(false);
-    const ITEMS_PER_PAGE = 50;
 
+    // Fetch analytics when analytics tab is opened
     useEffect(() => {
-        if (activeTab === 'analytics') {
+        if (activeTab === 'analytics' && !analytics) {
             fetchAnalytics();
-        } else if (activeTab === 'security') {
-            fetchSecurity();
         }
-    }, [activeTab, dateRange]);
-
-    const fetchSecurity = async () => {
-        setLoadingSecurity(true);
-        try {
-            const response = await fetch('/api/security/dashboard');
-            const data = await response.json();
-            setSecurityData(data);
-        } catch (error) {
-            console.error('Error fetching security data:', error);
-        } finally {
-            setLoadingSecurity(false);
-        }
-    };
+    }, [activeTab]);
 
     const fetchAnalytics = async () => {
         setLoadingAnalytics(true);
         try {
-            const query = new URLSearchParams();
-            if (dateRange.start) query.append('startDate', dateRange.start);
-            if (dateRange.end) query.append('endDate', dateRange.end);
-            
-            const response = await fetch(`/api/analytics/stats?${query.toString()}`);
+            const response = await fetch('/api/analytics/stats');
             const data = await response.json();
             setAnalytics(data);
-            setPageNumber(1); // Reset pagination on new data
         } catch (error) {
             console.error('Error fetching analytics:', error);
         } finally {
             setLoadingAnalytics(false);
         }
-    };
-
-    const handlePresetChange = (presetName: string) => {
-        setPreset(presetName);
-        const now = new Date();
-        let start = '';
-        let end = '';
-
-        switch (presetName) {
-            case 'today':
-                start = new Date(now.setHours(0, 0, 0, 0)).toISOString();
-                break;
-            case '24h':
-                start = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-                break;
-            case 'weekend': // Last Friday to Sunday
-                const day = now.getDay();
-                const diffToFriday = day >= 5 ? day - 5 : day + 2;
-                const friday = new Date(now.setDate(now.getDate() - diffToFriday));
-                friday.setHours(0,0,0,0);
-                start = friday.toISOString();
-                const sunday = new Date(friday.getTime() + 2 * 24 * 60 * 60 * 1000);
-                sunday.setHours(23,59,59,999);
-                end = sunday.toISOString();
-                break;
-            case '7d':
-                start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-                break;
-            case '30d':
-                start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
-                break;
-            case 'all':
-            default:
-                break;
-        }
-
-        setDateRange({ start, end });
-    };
-
-    const exportCsv = () => {
-        const query = new URLSearchParams();
-        if (dateRange.start) query.append('startDate', dateRange.start);
-        if (dateRange.end) query.append('endDate', dateRange.end);
-        window.open(`/api/analytics/export?${query.toString()}`, '_blank');
     };
 
     // Services CRUD
@@ -341,7 +269,7 @@ const AdminDashboard: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
                             onClick={onLogout}
                             className="bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-700 transition-colors shadow-sm"
                         >
-                            🚪 Logout
+                            ≡ƒÜ¬ Logout
                         </button>
                     )}
                     <button
@@ -354,7 +282,7 @@ const AdminDashboard: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
             </div>
 
             <div className="flex border-b border-gray-200 mb-8 overflow-x-auto scrollbar-hide">
-                {['branding', 'hero', 'services', 'portfolio', 'arsenal', 'trust-badges', 'about', 'navigation', 'team', 'analytics', 'security', 'contact'].map((tab) => (
+                {['branding', 'hero', 'services', 'portfolio', 'arsenal', 'trust-badges', 'about', 'navigation', 'team', 'analytics', 'contact'].map((tab) => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -534,7 +462,7 @@ const AdminDashboard: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
                                     className="absolute top-4 right-4 text-red-600 hover:text-red-800 font-bold"
                                     title="Delete"
                                 >
-                                    ✕
+                                    Γ£ò
                                 </button>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pr-8">
                                     <div>
@@ -596,7 +524,7 @@ const AdminDashboard: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
                                     className="absolute top-4 right-4 text-red-600 hover:text-red-800 font-bold"
                                     title="Delete"
                                 >
-                                    ✕
+                                    Γ£ò
                                 </button>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pr-8">
@@ -654,7 +582,7 @@ const AdminDashboard: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
                                                             }}
                                                             className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
                                                         >
-                                                            ✕
+                                                            Γ£ò
                                                         </button>
                                                     </div>
                                                 ))}
@@ -697,7 +625,7 @@ const AdminDashboard: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
                                     className="absolute top-4 right-4 text-red-600 hover:text-red-800 font-bold"
                                     title="Delete"
                                 >
-                                    ✕
+                                    Γ£ò
                                 </button>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pr-8">
                                     <div className="space-y-4">
@@ -767,7 +695,7 @@ const AdminDashboard: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
                                     className="absolute top-4 right-4 text-red-600 hover:text-red-800 font-bold"
                                     title="Delete"
                                 >
-                                    ✕
+                                    Γ£ò
                                 </button>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pr-8">
                                     <div>
@@ -813,7 +741,7 @@ const AdminDashboard: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
                                 <button
                                     onClick={() => { if (confirm('Delete this slide?')) updateContent({ ...content, heroSlides: content.heroSlides.filter((_, i) => i !== idx) }); }}
                                     className="absolute top-4 right-4 text-red-600 hover:text-red-800 font-bold" title="Delete"
-                                >✕</button>
+                                >Γ£ò</button>
                                 <p className="font-semibold text-gray-700">Slide {idx + 1}</p>
                                 {/* --- Background type toggle --- */}
                                 <div>
@@ -914,13 +842,13 @@ const AdminDashboard: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
                         <div className="flex justify-between items-center">
                             <h3 className="text-xl font-bold text-slate-900">Trust Badges</h3>
                             <button
-                                onClick={() => updateContent({ ...content, trustBadges: [...(content.trustBadges || []), { icon: '⭐', title: 'New Badge', subtitle: 'Badge description' }] })}
+                                onClick={() => updateContent({ ...content, trustBadges: [...(content.trustBadges || []), { icon: 'Γ¡É', title: 'New Badge', subtitle: 'Badge description' }] })}
                                 className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-opacity-90 transition-colors"
                             >+ Add Badge</button>
                         </div>
                         {(content.trustBadges || []).map((badge, idx) => (
                             <div key={idx} className="p-6 border border-gray-100 rounded-xl bg-gray-50/50 relative">
-                                <button onClick={() => { if (confirm('Delete badge?')) updateContent({ ...content, trustBadges: content.trustBadges.filter((_, i) => i !== idx) }); }} className="absolute top-4 right-4 text-red-600 hover:text-red-800 font-bold">✕</button>
+                                <button onClick={() => { if (confirm('Delete badge?')) updateContent({ ...content, trustBadges: content.trustBadges.filter((_, i) => i !== idx) }); }} className="absolute top-4 right-4 text-red-600 hover:text-red-800 font-bold">Γ£ò</button>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pr-8">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Icon (Emoji or Image)</label>
@@ -1013,7 +941,7 @@ const AdminDashboard: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
                                     className="absolute top-4 right-4 text-red-600 hover:text-red-800 font-bold"
                                     title="Delete"
                                 >
-                                    ✕
+                                    Γ£ò
                                 </button>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pr-8">
                                     <div className="space-y-4">
@@ -1056,402 +984,118 @@ const AdminDashboard: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
 
                 {activeTab === 'analytics' && (
                     <div className="space-y-8">
-                        {/* Header & Controls */}
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                            <div>
-                                <h3 className="text-xl font-bold text-slate-900">Visitor Analytics</h3>
-                                <p className="text-sm text-gray-500">Track and analyze your site traffic</p>
-                            </div>
-                            
-                            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                                <div className="border border-gray-300 rounded-lg overflow-hidden flex divide-x divide-gray-300">
-                                    {[
-                                        { id: 'today', label: 'Today' },
-                                        { id: '24h', label: '24h' },
-                                        { id: '7d', label: '7d' },
-                                        { id: '30d', label: '30d' },
-                                        { id: 'weekend', label: 'Weekend Walk-ins' },
-                                        { id: 'all', label: 'All Time' }
-                                    ].map(p => (
-                                        <button 
-                                            key={p.id}
-                                            onClick={() => handlePresetChange(p.id)}
-                                            className={`px-3 py-1.5 text-xs font-medium transition-colors ${preset === p.id ? 'bg-blue-50 text-blue-700' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                                        >
-                                            {p.label}
-                                        </button>
-                                    ))}
-                                </div>
-                                
-                                <div className="flex items-center space-x-2 text-sm bg-gray-50 p-1.5 rounded-lg border border-gray-200">
-                                    <input 
-                                        type="datetime-local" 
-                                        value={dateRange.start ? new Date(dateRange.start).toISOString().slice(0,16) : ''}
-                                        onChange={e => {
-                                            setPreset('custom');
-                                            setDateRange(prev => ({...prev, start: e.target.value ? new Date(e.target.value).toISOString() : ''}));
-                                        }}
-                                        className="bg-transparent border-none text-xs focus:ring-0 p-0 text-gray-600"
-                                    />
-                                    <span className="text-gray-400">to</span>
-                                    <input 
-                                        type="datetime-local" 
-                                        value={dateRange.end ? new Date(dateRange.end).toISOString().slice(0,16) : ''}
-                                        onChange={e => {
-                                            setPreset('custom');
-                                            setDateRange(prev => ({...prev, end: e.target.value ? new Date(e.target.value).toISOString() : ''}));
-                                        }}
-                                        className="bg-transparent border-none text-xs focus:ring-0 p-0 text-gray-600"
-                                    />
-                                </div>
-
-                                <button onClick={fetchAnalytics} className="p-2 border border-blue-200 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors" title="Refresh">
-                                    🔄
-                                </button>
-                                <button onClick={exportCsv} className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm">
-                                    <span>📥</span>
-                                    <span>Export CSV</span>
-                                </button>
-                            </div>
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-xl font-bold text-slate-900">Visitor Analytics</h3>
+                            <button
+                                onClick={fetchAnalytics}
+                                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-opacity-90 transition-colors"
+                            >
+                                ≡ƒöä Refresh
+                            </button>
                         </div>
 
                         {loadingAnalytics ? (
-                            <div className="text-center py-20 bg-white rounded-xl border border-gray-100 shadow-sm mx-auto">
-                                <div className="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
-                                <p className="text-gray-500 font-medium">Crunching the numbers...</p>
+                            <div className="text-center py-12">
+                                <p className="text-gray-500">Loading analytics...</p>
                             </div>
                         ) : analytics ? (
-                            <div className="space-y-6">
+                            <>
                                 {/* Stats Cards */}
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="text-sm font-medium text-gray-500">Filtered Visitors</div>
-                                            <span className="p-2 bg-blue-50 rounded-lg text-blue-600 text-lg">👥</span>
-                                        </div>
-                                        <div className="text-3xl font-bold text-slate-900">{analytics.uniqueVisitors.filtered.toLocaleString()}</div>
-                                        <div className="text-xs text-gray-400 mt-1">Unique IPs in range</div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
+                                        <div className="text-sm opacity-90 mb-1">Total Page Views</div>
+                                        <div className="text-3xl font-bold">{analytics.totalPageViews.toLocaleString()}</div>
                                     </div>
-                                    <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="text-sm font-medium text-gray-500">Total Page Views</div>
-                                            <span className="p-2 bg-indigo-50 rounded-lg text-indigo-600 text-lg">📄</span>
-                                        </div>
-                                        <div className="text-3xl font-bold text-slate-900">{analytics.totalPageViews.toLocaleString()}</div>
-                                        <div className="text-xs text-gray-400 mt-1">Raw server hits</div>
+                                    <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
+                                        <div className="text-sm opacity-90 mb-1">Unique Visitors (All Time)</div>
+                                        <div className="text-3xl font-bold">{analytics.uniqueVisitors.allTime.toLocaleString()}</div>
                                     </div>
-                                    <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="text-sm font-medium text-gray-500">SPA Navigations</div>
-                                            <span className="p-2 bg-purple-50 rounded-lg text-purple-600 text-lg">⚡</span>
-                                        </div>
-                                        <div className="text-3xl font-bold text-slate-900">{analytics.totalSpaPageViews.toLocaleString()}</div>
-                                        <div className="text-xs text-gray-400 mt-1">In-app routing events</div>
+                                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+                                        <div className="text-sm opacity-90 mb-1">Visitors This Month</div>
+                                        <div className="text-3xl font-bold">{analytics.uniqueVisitors.month.toLocaleString()}</div>
                                     </div>
-                                    <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="text-sm font-medium text-gray-500">Security Threats</div>
-                                            <span className="p-2 bg-red-50 rounded-lg text-red-600 text-lg">🛡️</span>
-                                        </div>
-                                        <div className="text-3xl font-bold text-red-600">{analytics.totalMalicious.toLocaleString()}</div>
-                                        <div className="text-xs text-gray-400 mt-1">Blocked requests</div>
+                                    <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg">
+                                        <div className="text-sm opacity-90 mb-1">Visitors Today</div>
+                                        <div className="text-3xl font-bold">{analytics.uniqueVisitors.today.toLocaleString()}</div>
                                     </div>
                                 </div>
 
-                                {/* Graphs Row */}
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    {/* Hourly Breakdown */}
-                                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                                        <h4 className="text-lg font-bold text-slate-900 mb-6">Traffic by Time of Day (Filtered)</h4>
-                                        <div className="h-48 flex items-end justify-between space-x-1">
-                                            {analytics.hourlyBuckets?.map((bucket: any, idx: number) => {
-                                                const maxCount = Math.max(...analytics.hourlyBuckets.map((b:any)=>b.count), 0);
-                                                const heightPct = maxCount > 0 ? (bucket.count / maxCount) * 100 : 0;
-                                                const heightStyle = heightPct > 0 ? `${heightPct}%` : '4px';
-                                                return (
-                                                    <div key={idx} className="flex-1 flex flex-col items-center group">
-                                                        <div className="w-full bg-blue-100 rounded-t-sm relative transition-all duration-300 group-hover:bg-blue-500 cursor-default" style={{ height: heightStyle }}>
-                                                            <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded pointer-events-none transition-opacity whitespace-nowrap z-10">
-                                                                {bucket.count} visits
-                                                            </div>
-                                                        </div>
-                                                        <div className="text-[10px] text-gray-400 mt-2 truncate w-full text-center">
-                                                            {idx%3===0 ? `${idx}h` : ''}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-
-                                    {/* 7-Day Context (Unfiltered context) */}
-                                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                                        <h4 className="text-lg font-bold text-slate-900 mb-6">Last 7 Days (Overall Context)</h4>
-                                        <div className="h-48 flex items-end justify-between space-x-2">
-                                            {analytics.dailyBuckets?.map((bucket: any, idx: number) => {
-                                                const maxCount = Math.max(...analytics.dailyBuckets.map((b:any)=>b.count), 0);
-                                                const heightPct = maxCount > 0 ? (bucket.count / maxCount) * 100 : 0;
-                                                const heightStyle = heightPct > 0 ? `${heightPct}%` : '4px';
-                                                return (
-                                                    <div key={idx} className="flex-1 flex flex-col items-center group">
-                                                        <div className="w-full bg-purple-100 rounded-t-sm relative transition-all duration-300 group-hover:bg-purple-500 cursor-default" style={{ height: heightStyle }}>
-                                                            <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded pointer-events-none transition-opacity whitespace-nowrap z-10">
-                                                                {bucket.count}
-                                                            </div>
-                                                        </div>
-                                                        <div className="text-xs text-gray-500 mt-2 font-medium">
-                                                            {bucket.label.split(' ')[0]}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Breakdowns Row */}
-                                <div className="grid grid-cols-1 xl:grid-cols-4 md:grid-cols-2 gap-6">
-                                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                                        <h4 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider">Device Types</h4>
-                                        <div className="space-y-3">
-                                            {analytics.deviceBreakdown.length === 0 && <p className="text-sm text-gray-500">No data</p>}
-                                            {analytics.deviceBreakdown.map((item: any) => (
-                                                <div key={item.device} className="flex items-center justify-between">
-                                                    <div className="flex items-center space-x-2">
-                                                        <span className="text-gray-400">{item.device === 'Desktop' ? '💻' : item.device === 'Mobile' ? '📱' : item.device === 'Tablet' ? '💊' : '❓'}</span>
-                                                        <span className="text-sm font-medium text-gray-700">{item.device}</span>
-                                                    </div>
-                                                    <span className="text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{item.count}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                                        <h4 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider">Browsers</h4>
-                                        <div className="space-y-3">
-                                            {analytics.browserBreakdown.length === 0 && <p className="text-sm text-gray-500">No data</p>}
-                                            {analytics.browserBreakdown.slice(0,5).map((item: any) => (
-                                                <div key={item.browser} className="flex items-center justify-between">
-                                                    <span className="text-sm font-medium text-gray-700">{item.browser}</span>
-                                                    <span className="text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{item.count}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                                        <h4 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider">SPA Routes</h4>
-                                        <div className="space-y-3">
-                                            {analytics.spaTopPages.length === 0 && <p className="text-sm text-gray-500">No data</p>}
-                                            {analytics.spaTopPages.slice(0,5).map((item: any) => (
-                                                <div key={item.page} className="flex items-center justify-between">
-                                                    <span className="text-sm font-medium text-gray-700 capitalize">{item.page}</span>
-                                                    <span className="text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{item.count}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                                        <h4 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider">Top Referrers</h4>
-                                        <div className="space-y-3">
-                                            {(!analytics.topReferrers || analytics.topReferrers.length === 0) && <p className="text-sm text-gray-500">No data</p>}
-                                            {analytics.topReferrers?.slice(0,5).map((item: any) => (
-                                                <div key={item.referrer} className="flex items-center justify-between">
-                                                    <span className="text-sm font-medium text-gray-700 truncate max-w-[120px]" title={item.referrer}>{item.referrer === 'direct' ? 'Direct/None' : item.referrer}</span>
-                                                    <span className="text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{item.count}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Formatted Visitor Table */}
-                                <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-                                    <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                                        <div>
-                                            <h4 className="text-lg font-bold text-slate-900">Detailed Request Log</h4>
-                                            <div className="text-sm text-gray-500">
-                                                Showing {((pageNumber - 1) * ITEMS_PER_PAGE) + 1}-{Math.min(pageNumber * ITEMS_PER_PAGE, (showThreatsOnly ? analytics.recentVisitors.filter((v:any) => v.isMalicious || v.isBlacklisted) : analytics.recentVisitors).length)} of {(showThreatsOnly ? analytics.recentVisitors.filter((v:any) => v.isMalicious || v.isBlacklisted) : analytics.recentVisitors).length}
+                                {/* Top Pages */}
+                                <div className="bg-white border border-gray-200 rounded-xl p-6">
+                                    <h4 className="text-lg font-bold text-slate-900 mb-4">Top Pages</h4>
+                                    <div className="space-y-2">
+                                        {analytics.topPages.map((page: any, idx: number) => (
+                                            <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                                                <span className="text-gray-700 font-mono text-sm">{page.path}</span>
+                                                <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold">{page.count} views</span>
                                             </div>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <label className="flex items-center space-x-2 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                                                <input 
-                                                    type="checkbox" 
-                                                    checked={showThreatsOnly}
-                                                    onChange={e => { setShowThreatsOnly(e.target.checked); setPageNumber(1); }}
-                                                    className="w-4 h-4 text-red-600 focus:ring-red-600 border-gray-300 rounded"
-                                                />
-                                                <span>Threats Only</span>
-                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Top Referrers */}
+                                {analytics.topReferrers.length > 0 && (
+                                    <div className="bg-white border border-gray-200 rounded-xl p-6">
+                                        <h4 className="text-lg font-bold text-slate-900 mb-4">Top Referrers</h4>
+                                        <div className="space-y-2">
+                                            {analytics.topReferrers.map((ref: any, idx: number) => (
+                                                <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                                                    <span className="text-gray-700 text-sm">{ref.referrer}</span>
+                                                    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">{ref.count} visits</span>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
-                                    <div className="overflow-x-auto w-full">
-                                        <table className="w-full text-sm text-left table-auto">
-                                            <thead className="bg-gray-50 text-gray-500 border-b border-gray-200">
+                                )}
+
+                                {/* Recent Visitors */}
+                                <div className="bg-white border border-gray-200 rounded-xl p-6">
+                                    <h4 className="text-lg font-bold text-slate-900 mb-4">Recent Visitors (Last 500)</h4>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm">
+                                            <thead className="bg-gray-50 border-b border-gray-200">
                                                 <tr>
-                                                    <th className="px-6 py-4 font-semibold whitespace-nowrap">Time</th>
-                                                    <th className="px-6 py-4 font-semibold whitespace-nowrap">Client</th>
-                                                    <th className="px-6 py-4 font-semibold whitespace-nowrap">Device Info</th>
-                                                    <th className="px-6 py-4 font-semibold whitespace-nowrap">Target</th>
-                                                    <th className="px-6 py-4 font-semibold whitespace-nowrap text-right">Status</th>
+                                                    <th className="text-left p-3 font-semibold text-gray-700">Time</th>
+                                                    <th className="text-left p-3 font-semibold text-gray-700">IP Address</th>
+                                                    <th className="text-left p-3 font-semibold text-gray-700">Page</th>
+                                                    <th className="text-left p-3 font-semibold text-gray-700">Referrer</th>
+                                                    <th className="text-left p-3 font-semibold text-gray-700">Status</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-gray-100">
-                                                {(showThreatsOnly ? analytics.recentVisitors.filter((v:any) => v.isMalicious || v.isBlacklisted) : analytics.recentVisitors).length > 0 ? (
-                                                    (showThreatsOnly ? analytics.recentVisitors.filter((v:any) => v.isMalicious || v.isBlacklisted) : analytics.recentVisitors)
-                                                        .slice((pageNumber - 1) * ITEMS_PER_PAGE, pageNumber * ITEMS_PER_PAGE)
-                                                        .map((v: any, idx: number) => {
-                                                            const isMalicious = v.isMalicious || v.isBlacklisted;
-                                                            return (
-                                                                <tr key={idx} className={`hover:bg-gray-50/80 transition-colors ${isMalicious ? 'bg-red-50/50' : ''}`}>
-                                                                    <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
-                                                                        {new Date(v.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
-                                                                    </td>
-                                                                    <td className="px-6 py-4">
-                                                                        <div className="font-mono text-gray-900 font-medium whitespace-nowrap">{v.ip}</div>
-                                                                    </td>
-                                                                    <td className="px-6 py-4">
-                                                                        <div className="flex items-center space-x-2 whitespace-nowrap">
-                                                                            <span className="font-medium text-gray-700">{v.browser}</span>
-                                                                            <span className="text-gray-300">•</span>
-                                                                            <span className="text-gray-500">{v.deviceType}</span>
-                                                                        </div>
-                                                                        <div className="text-[10px] text-gray-400 mt-1 max-w-[200px] truncate" title={v.userAgent}>
-                                                                            {v.userAgent}
-                                                                        </div>
-                                                                    </td>
-                                                                    <td className="px-6 py-4">
-                                                                        <div className="font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded max-w-fit whitespace-nowrap">{v.path}</div>
-                                                                        {v.referrer && v.referrer !== 'direct' && (
-                                                                            <div className="text-xs text-gray-400 mt-1 truncate max-w-[200px]" title={v.referrer}>
-                                                                                from: {v.referrer}
-                                                                            </div>
-                                                                        )}
-                                                                    </td>
-                                                                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                                                                        {isMalicious ? (
-                                                                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-red-100 text-red-700">
-                                                                                🚫 THREAT
-                                                                            </span>
-                                                                        ) : (
-                                                                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-600">
-                                                                                ✓ Safe
-                                                                            </span>
-                                                                        )}
-                                                                    </td>
-                                                                </tr>
-                                                            );
-                                                        })
-                                                ) : (
-                                                    <tr>
-                                                        <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                                                            No visitors found in this date range.
+                                            <tbody>
+                                                {analytics.recentVisitors.map((visitor: any, idx: number) => (
+                                                    <tr
+                                                        key={idx}
+                                                        className={`border-b border-gray-100 hover:bg-gray-50 ${visitor.isMalicious || visitor.isBlacklisted ? 'bg-red-50' : ''
+                                                            }`}
+                                                    >
+                                                        <td className="p-3 text-gray-600">{new Date(visitor.timestamp).toLocaleString()}</td>
+                                                        <td className="p-3 font-mono text-gray-700 font-semibold">{visitor.ip}</td>
+                                                        <td className="p-3 font-mono text-gray-700">{visitor.path}</td>
+                                                        <td className="p-3 text-gray-600 truncate max-w-xs">{visitor.referrer}</td>
+                                                        <td className="p-3">
+                                                            {visitor.isMalicious || visitor.isBlacklisted ? (
+                                                                <span className="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">
+                                                                    ≡ƒÜ½ THREAT
+                                                                </span>
+                                                            ) : (
+                                                                <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-semibold">
+                                                                    Γ£ô Safe
+                                                                </span>
+                                                            )}
                                                         </td>
                                                     </tr>
-                                                )}
+                                                ))}
                                             </tbody>
                                         </table>
                                     </div>
-                                    
-                                    {/* Pagination Controls */}
-                                    {(showThreatsOnly ? analytics.recentVisitors.filter((v:any) => v.isMalicious || v.isBlacklisted) : analytics.recentVisitors).length > ITEMS_PER_PAGE && (
-                                        <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
-                                            <button 
-                                                onClick={() => setPageNumber(p => Math.max(1, p - 1))}
-                                                disabled={pageNumber === 1}
-                                                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                            >
-                                                Previous
-                                            </button>
-                                            <div className="text-sm font-medium text-gray-600">
-                                                Page {pageNumber} of {Math.ceil((showThreatsOnly ? analytics.recentVisitors.filter((v:any) => v.isMalicious || v.isBlacklisted) : analytics.recentVisitors).length / ITEMS_PER_PAGE)}
-                                            </div>
-                                            <button 
-                                                onClick={() => setPageNumber(p => Math.min(Math.ceil((showThreatsOnly ? analytics.recentVisitors.filter((v:any) => v.isMalicious || v.isBlacklisted) : analytics.recentVisitors).length / ITEMS_PER_PAGE), p + 1))}
-                                                disabled={pageNumber === Math.ceil((showThreatsOnly ? analytics.recentVisitors.filter((v:any) => v.isMalicious || v.isBlacklisted) : analytics.recentVisitors).length / ITEMS_PER_PAGE)}
-                                                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                            >
-                                                Next
-                                            </button>
-                                        </div>
-                                    )}
                                 </div>
-                            </div>
+                            </>
                         ) : (
                             <div className="text-center py-12">
                                 <p className="text-gray-500">No analytics data available yet.</p>
                             </div>
                         )}
-                    </div>
-                )}
-
-                {activeTab === 'security' && (
-                    <div className="space-y-6">
-                        <div className="flex justify-between items-center bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                            <div>
-                                <h3 className="text-xl font-bold text-slate-900">Security Dashboard</h3>
-                                <p className="text-sm text-gray-500">Monitor suspicious activities and blocked requests</p>
-                            </div>
-                            <button
-                                onClick={fetchSecurity}
-                                className="bg-blue-50 border border-blue-200 text-blue-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-100 transition-colors"
-                            >
-                                🔄 Refresh
-                            </button>
-                        </div>
-
-                        {loadingSecurity ? (
-                            <div className="text-center py-20 bg-white rounded-xl border border-gray-100 shadow-sm mx-auto">
-                                <div className="animate-spin inline-block w-8 h-8 border-4 border-slate-500 border-t-transparent rounded-full mb-4"></div>
-                                <p className="text-gray-500 font-medium">Fetching security logs...</p>
-                            </div>
-                        ) : securityData ? (
-                            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-                                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-red-50/50">
-                                    <h4 className="text-lg font-bold text-slate-900">Suspicious Event Log</h4>
-                                    <div className="text-sm font-medium text-red-600 bg-red-100 px-3 py-1 rounded-full">
-                                        {securityData.suspiciousRequests?.length || 0} Recent Events
-                                    </div>
-                                </div>
-                                <div className="overflow-x-auto w-full">
-                                    <table className="w-full text-sm text-left table-auto">
-                                        <thead className="bg-gray-50 text-gray-500 border-b border-gray-200">
-                                            <tr>
-                                                <th className="px-6 py-4 font-semibold whitespace-nowrap">Time</th>
-                                                <th className="px-6 py-4 font-semibold whitespace-nowrap">IP Address</th>
-                                                <th className="px-6 py-4 font-semibold whitespace-nowrap">Method/Path</th>
-                                                <th className="px-6 py-4 font-semibold whitespace-nowrap">Reason</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-100">
-                                            {securityData.suspiciousRequests?.map((req: any, idx: number) => (
-                                                <tr key={idx} className="hover:bg-gray-50/80 transition-colors">
-                                                    <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
-                                                        {new Date(req.time).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
-                                                    </td>
-                                                    <td className="px-6 py-4 font-mono text-gray-900 font-medium whitespace-nowrap">
-                                                        {req.ip}
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded max-w-fit">{req.method} {req.path}</div>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-red-600 font-bold">
-                                                        {req.reason}
-                                                    </td>
-                                                </tr>
-                                            )).reverse()}
-                                            {(!securityData.suspiciousRequests || securityData.suspiciousRequests.length === 0) && (
-                                                <tr>
-                                                    <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
-                                                        No suspicious events logged. Awesome!
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        ) : null}
                     </div>
                 )}
 
@@ -1482,7 +1126,7 @@ const AdminDashboard: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
                                         updateContent({ ...content, contactItems: items } as any);
                                     }}
                                     className="absolute top-4 right-4 text-red-600 hover:text-red-800 font-bold"
-                                >✕</button>
+                                >Γ£ò</button>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pr-8">
                                     <div>
@@ -1514,7 +1158,7 @@ const AdminDashboard: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
                                         />
                                     </div>
                                     <div className="sm:col-span-2">
-                                        <label className="block text-xs font-medium text-gray-600 mb-1">Link (href) — optional</label>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Link (href) ΓÇö optional</label>
                                         <input
                                             type="text"
                                             value={item.href || ''}
@@ -1538,12 +1182,12 @@ const AdminDashboard: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
                                             }}
                                             className="w-full p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-blue-600 focus:border-blue-600 bg-white"
                                         >
-                                            <option value="mail">✉ Email</option>
-                                            <option value="phone">📞 Phone</option>
-                                            <option value="map">📍 Address / Map</option>
-                                            <option value="whatsapp">💬 WhatsApp</option>
-                                            <option value="globe">🌐 Website</option>
-                                            <option value="instagram">📸 Instagram</option>
+                                            <option value="mail">Γ£ë Email</option>
+                                            <option value="phone">≡ƒô₧ Phone</option>
+                                            <option value="map">≡ƒôì Address / Map</option>
+                                            <option value="whatsapp">≡ƒÆ¼ WhatsApp</option>
+                                            <option value="globe">≡ƒîÉ Website</option>
+                                            <option value="instagram">≡ƒô╕ Instagram</option>
                                         </select>
                                     </div>
                                     <div>
