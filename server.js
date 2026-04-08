@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join, basename, extname } from 'path';
 import fs from 'fs';
 import cookieParser from 'cookie-parser';
-import { logVisitor, getAnalyticsStats } from './analytics.js';
+import { logVisitor, getAnalyticsStats, logPageView, exportVisitorsCSV } from './analytics.js';
 import { verifyPassword, generateToken, isLockedOut, recordFailedAttempt, clearLoginAttempts, requireAuth } from './auth.js';
 import { securityMiddleware, getSuspiciousActivity, getBlacklistData, emergencyUnlock } from './security.js';
 
@@ -219,14 +219,46 @@ app.get('/api/auth/verify', requireAuth, (req, res) => {
     res.json({ authenticated: true });
 });
 
-// Analytics Stats Endpoint (protected)
+// Analytics Stats Endpoint (protected) — supports ?startDate=&endDate= query params
 app.get('/api/analytics/stats', requireAuth, (req, res) => {
     try {
-        const stats = getAnalyticsStats();
+        const { startDate, endDate } = req.query;
+        const stats = getAnalyticsStats({ startDate, endDate });
         res.json(stats);
     } catch (error) {
         console.error('Error fetching analytics:', error);
         res.status(500).json({ error: 'Failed to fetch analytics' });
+    }
+});
+
+// SPA Page-View Beacon (unauthenticated — called by frontend on route change)
+app.post('/api/analytics/log-page-view', express.json(), (req, res) => {
+    try {
+        const { page } = req.body;
+        const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+        const ua = req.headers['user-agent'] || 'unknown';
+        const referrer = req.headers['referer'] || 'direct';
+        logPageView(ip, ua, page || 'home', referrer);
+        res.json({ ok: true });
+    } catch (error) {
+        console.error('Error logging page view:', error);
+        res.status(500).json({ error: 'Failed to log page view' });
+    }
+});
+
+// Export Analytics CSV (protected) — supports ?startDate=&endDate= query params
+app.get('/api/analytics/export', requireAuth, (req, res) => {
+    try {
+        const { startDate, endDate } = req.query;
+        const csv = exportVisitorsCSV({ startDate, endDate });
+        if (!csv) return res.status(500).json({ error: 'Failed to generate CSV' });
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="visitors-${timestamp}.csv"`);
+        res.send(csv);
+    } catch (error) {
+        console.error('Error exporting analytics:', error);
+        res.status(500).json({ error: 'Failed to export analytics' });
     }
 });
 

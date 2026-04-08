@@ -133,6 +133,16 @@ const AppContent: React.FC = () => {
     return () => window.removeEventListener('popstate', onPop);
   }, []);
 
+  // Beacon SPA page view to server on every page change
+  useEffect(() => {
+    if (checkingAuth) return; // don't fire until auth is settled
+    fetch('/api/analytics/log-page-view', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ page: currentPage }),
+    }).catch(() => {}); // silently ignore network errors
+  }, [currentPage, checkingAuth]);
+
   if (showLogin && !isAuthenticated) return <LoginPage onLoginSuccess={handleLoginSuccess} />;
   if (isAdmin && isAuthenticated) return <AdminDashboard onLogout={handleLogout} />;
   if (checkingAuth) return null;
