@@ -51,14 +51,25 @@ Please get back to me!`;
         if (!emailItem) return;
         const subject = encodeURIComponent(`New Project Inquiry from ${clientData.name}`);
         const body = encodeURIComponent(generateMessage());
-        // Create a hidden <a> and click it — the only reliable cross-browser
-        // way to trigger a mailto: without navigating the SPA or opening a blank tab
+        // Hidden anchor click — most reliable cross-browser mailto: trigger
         const a = document.createElement('a');
         a.href = `${emailItem.href}?subject=${subject}&body=${body}`;
         a.style.display = 'none';
         document.body.appendChild(a);
         a.click();
         setTimeout(() => document.body.removeChild(a), 100);
+    };
+
+    const handleGmail = () => {
+        if (!emailItem) return;
+        const to = emailItem.href.replace('mailto:', '');
+        const subject = encodeURIComponent(`New Project Inquiry from ${clientData.name}`);
+        const body = encodeURIComponent(generateMessage());
+        // Gmail web compose URL — works for anyone logged into Gmail in their browser
+        window.open(
+            `https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${subject}&body=${body}`,
+            '_blank'
+        );
     };
 
     return (
@@ -339,10 +350,21 @@ Please get back to me!`;
                                                 </button>
                                             )}
                                             {emailItem && (
-                                                <button onClick={handleEmail} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-xl shadow-xl flex items-center justify-center gap-3 transition-colors">
-                                                    <span className="material-icons">mail</span>
-                                                    Send via Email
-                                                </button>
+                                                <>
+                                                    {/* Gmail web compose */}
+                                                    <button onClick={handleGmail} className="w-full bg-white hover:bg-slate-50 text-slate-900 font-bold py-4 rounded-xl shadow-md border border-slate-200 flex items-center justify-center gap-3 transition-colors">
+                                                        {/* Gmail SVG icon */}
+                                                        <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z" fill="#EA4335"/>
+                                                        </svg>
+                                                        Open in Gmail
+                                                    </button>
+                                                    {/* Native mail client */}
+                                                    <button onClick={handleEmail} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-xl shadow-xl flex items-center justify-center gap-3 transition-colors">
+                                                        <span className="material-icons">mail</span>
+                                                        Mail App (Outlook, Apple Mail…)
+                                                    </button>
+                                                </>
                                             )}
                                         </div>
                                     </div>
