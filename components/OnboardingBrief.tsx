@@ -51,7 +51,9 @@ Please get back to me!`;
         if (!emailItem) return;
         const subject = encodeURIComponent(`New Project Inquiry from ${clientData.name}`);
         const body = encodeURIComponent(generateMessage());
-        window.open(`${emailItem.href}?subject=${subject}&body=${body}`, '_blank');
+        // Use location.href so the browser hands off to the system email client
+        // instead of opening a blank tab (window.open doesn't handle mailto:)
+        window.location.href = `${emailItem.href}?subject=${subject}&body=${body}`;
     };
 
     return (
