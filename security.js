@@ -7,7 +7,7 @@ const dataDir = isPersistentDiskAvailable ? '/data' : process.cwd();
 const blacklistFile = join(dataDir, 'ip-blacklist.json');
 const suspiciousFile = join(dataDir, 'suspicious-activity.json');
 
-// Known malicious patterns
+// Known malicious URL patterns (WordPress/PHP attacks, shell injections, etc.)
 const MALICIOUS_PATTERNS = [
     /wp-admin/i,
     /wordpress/i,
@@ -19,32 +19,29 @@ const MALICIOUS_PATTERNS = [
     /xmlrpc\.php/i,
     /wp-login/i,
     /\.env$/i,
-    /\.git/i,
+    /\.git\//i,
     /config\.php/i,
     /setup-config/i,
     /install\.php/i,
     /\.sql$/i,
-    /backup/i,
-    /shell/i,
     /eval\(/i,
-    /base64/i
+    /base64_decode/i,
 ];
 
-// Bot user agents
+// Only block clearly malicious attack tools — NOT general HTTP clients
 const BOT_PATTERNS = [
-    /bot/i,
-    /crawler/i,
-    /spider/i,
-    /scraper/i,
-    /curl/i,
-    /wget/i,
-    /python/i,
-    /scanner/i,
     /nikto/i,
     /nmap/i,
     /masscan/i,
-    /sqlmap/i
+    /sqlmap/i,
+    /dirbuster/i,
+    /zgrab/i,
+    /nuclei/i,
+    /gospider/i,
 ];
+
+// SPA routes that should always be served (pass through to index.html)
+const SPA_ROUTES = ['/', '/about', '/contact', '/onboarding', '/brief', '/index.html'];
 
 // Initialize files
 function initSecurityFiles() {
@@ -124,12 +121,13 @@ function isMaliciousRequest(req) {
         }
     }
 
-    // Check for bot user agents (but allow legitimate bots)
-    const isLegitimateBot = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit/i.test(userAgent);
+    // Check for known attack tool user agents
+    // Allow legitimate bots (Google, Bing, social crawlers, etc.)
+    const isLegitimateBot = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot|linkedinbot/i.test(userAgent);
     if (!isLegitimateBot) {
         for (const pattern of BOT_PATTERNS) {
             if (pattern.test(userAgent)) {
-                return { malicious: true, reason: `Suspicious bot: ${userAgent}` };
+                return { malicious: true, reason: `Attack tool detected: ${userAgent}` };
             }
         }
     }
@@ -141,36 +139,35 @@ function isMaliciousRequest(req) {
 export function securityMiddleware(req, res, next) {
     const ip = req.ip || req.connection.remoteAddress;
 
-    // FIRST PRIORITY: Allow ALL API endpoints (includes auth, emergency unlock, etc.)
-    // This ensures users can ALWAYS attempt login and access admin functions
+    // 1. Always allow API endpoints (auth, content, uploads, etc.)
     if (req.path.startsWith('/api/')) {
         return next();
     }
 
-    // SECOND PRIORITY: Skip security checks for static assets and legitimate paths
-    if (
-        req.path.startsWith('/assets/') ||
-        req.path.startsWith('/uploads/') ||
-        req.path === '/' ||
-        req.path === '/index.html' ||
-        req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|webp|ttf|eot|otf|map|json)$/i)
-    ) {
+    // 2. Always allow SPA page routes — these must reach the SPA fallback (index.html)
+    if (SPA_ROUTES.includes(req.path)) {
         return next();
     }
 
-    // Check blacklist (only for non-API, non-static requests)
+    // 3. Always allow static assets and uploads
+    const isStaticAsset = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|webp|ttf|eot|otf|map|json)$/i.test(req.path);
+    if (isStaticAsset || req.path.startsWith('/assets/') || req.path.startsWith('/uploads/')) {
+        return next();
+    }
+
+    // 4. Check blacklist (only for unknown paths)
     if (isBlacklisted(ip)) {
         console.log(`🚫 Blocked blacklisted IP: ${ip} - ${req.path}`);
         return res.status(403).send('Forbidden');
     }
 
-    // Check for malicious requests
+    // 5. Check for malicious request patterns
     const check = isMaliciousRequest(req);
     if (check.malicious) {
         console.log(`⚠️ Malicious request detected: ${ip} - ${req.path} - ${check.reason}`);
         logSuspiciousActivity(req, check.reason);
         addToBlacklist(ip, 'auto');
-        return res.status(404).send('Not Found'); // Return 404 to confuse attackers
+        return res.status(404).send('Not Found'); // 404 confuses automated scanners
     }
 
     next();
@@ -191,26 +188,23 @@ export function getBlacklistData() {
     return getBlacklist();
 }
 
-// Clear login attempts (emergency unlock)
+// Emergency unlock: clears ALL security files (login attempts, blacklist, suspicious activity)
 export function emergencyUnlock() {
     const loginAttemptsFile = join(dataDir, 'login-attempts.json');
     let cleared = false;
 
-    // Clear login attempts
     if (fs.existsSync(loginAttemptsFile)) {
         fs.writeFileSync(loginAttemptsFile, JSON.stringify({ attempts: {} }, null, 2));
         console.log('🔓 Emergency unlock: Login attempts cleared');
         cleared = true;
     }
 
-    // Clear blacklist
     if (fs.existsSync(blacklistFile)) {
         fs.writeFileSync(blacklistFile, JSON.stringify({ ips: [], autoBlocked: [] }, null, 2));
         console.log('🔓 Emergency unlock: IP blacklist cleared');
         cleared = true;
     }
 
-    // Clear suspicious activity
     if (fs.existsSync(suspiciousFile)) {
         fs.writeFileSync(suspiciousFile, JSON.stringify({ requests: [] }, null, 2));
         console.log('🔓 Emergency unlock: Suspicious activity cleared');
