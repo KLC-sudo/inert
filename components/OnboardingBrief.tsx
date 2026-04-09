@@ -51,9 +51,14 @@ Please get back to me!`;
         if (!emailItem) return;
         const subject = encodeURIComponent(`New Project Inquiry from ${clientData.name}`);
         const body = encodeURIComponent(generateMessage());
-        // Use location.href so the browser hands off to the system email client
-        // instead of opening a blank tab (window.open doesn't handle mailto:)
-        window.location.href = `${emailItem.href}?subject=${subject}&body=${body}`;
+        // Create a hidden <a> and click it — the only reliable cross-browser
+        // way to trigger a mailto: without navigating the SPA or opening a blank tab
+        const a = document.createElement('a');
+        a.href = `${emailItem.href}?subject=${subject}&body=${body}`;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => document.body.removeChild(a), 100);
     };
 
     return (
