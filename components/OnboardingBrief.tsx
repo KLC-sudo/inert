@@ -1,5 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useContent } from '../ContentContext';
+
+// Post funnel events to the server analytics store
+function trackFunnel(eventType: string, payload: Record<string, unknown> = {}) {
+    fetch('/api/analytics/funnel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventType, ...payload }),
+    }).catch(() => {}); // silent — never block the UI
+}
 
 const OnboardingBrief: React.FC = () => {
     const { content } = useContent();
@@ -28,6 +37,23 @@ const OnboardingBrief: React.FC = () => {
     const isStep2Valid = projectBrief.trim() !== '' && budget.trim() !== '' && timeline.trim() !== '';
     const isStep3Valid = clientData.name.trim() !== '' && (clientData.phone.trim() !== '' || clientData.email.trim() !== '');
 
+    // ── Funnel tracking: fire a gtag event every time the step changes ──────────
+    const STEP_NAMES: Record<number, string> = {
+        1: 'the_spark',
+        2: 'the_scope',
+        3: 'the_details',
+        4: 'the_connection',
+    };
+
+    useEffect(() => {
+        trackFunnel('step_view', {
+            step_number: step,
+            step_name: STEP_NAMES[step],
+            selected_services: selectedServices.join(', ') || undefined,
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [step]);
+
     const whatsappItem = content.contactItems?.find((i: any) => i.label === 'WhatsApp');
     const emailItem = content.contactItems?.find((i: any) => i.label === 'Email');
 
@@ -43,15 +69,24 @@ Please get back to me!`;
 
     const handleWhatsApp = () => {
         if (!whatsappItem) return;
+        trackFunnel('submit', {
+            method: 'whatsapp',
+            selected_services: selectedServices.join(', '),
+            client_location: clientData.location || undefined,
+        });
         const msg = encodeURIComponent(generateMessage());
         window.open(`${whatsappItem.href}?text=${msg}`, '_blank');
     };
 
     const handleEmail = () => {
         if (!emailItem) return;
+        trackFunnel('submit', {
+            method: 'mail_app',
+            selected_services: selectedServices.join(', '),
+            client_location: clientData.location || undefined,
+        });
         const subject = encodeURIComponent(`New Project Inquiry from ${clientData.name}`);
         const body = encodeURIComponent(generateMessage());
-        // Hidden anchor click — most reliable cross-browser mailto: trigger
         const a = document.createElement('a');
         a.href = `${emailItem.href}?subject=${subject}&body=${body}`;
         a.style.display = 'none';
@@ -62,10 +97,14 @@ Please get back to me!`;
 
     const handleGmail = () => {
         if (!emailItem) return;
+        trackFunnel('submit', {
+            method: 'gmail',
+            selected_services: selectedServices.join(', '),
+            client_location: clientData.location || undefined,
+        });
         const to = emailItem.href.replace('mailto:', '');
         const subject = encodeURIComponent(`New Project Inquiry from ${clientData.name}`);
         const body = encodeURIComponent(generateMessage());
-        // Gmail web compose URL — works for anyone logged into Gmail in their browser
         window.open(
             `https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${subject}&body=${body}`,
             '_blank'

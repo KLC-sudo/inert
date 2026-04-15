@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join, basename, extname } from 'path';
 import fs from 'fs';
 import cookieParser from 'cookie-parser';
-import { logVisitor, getAnalyticsStats, logPageView, exportVisitorsCSV } from './analytics.js';
+import { logVisitor, getAnalyticsStats, logPageView, logFunnelEvent, exportVisitorsCSV } from './analytics.js';
 import { verifyPassword, generateToken, isLockedOut, recordFailedAttempt, clearLoginAttempts, requireAuth } from './auth.js';
 import { securityMiddleware, getSuspiciousActivity, getBlacklistData, emergencyUnlock } from './security.js';
 
@@ -259,6 +259,21 @@ app.get('/api/analytics/export', requireAuth, (req, res) => {
     } catch (error) {
         console.error('Error exporting analytics:', error);
         res.status(500).json({ error: 'Failed to export analytics' });
+    }
+});
+
+// Onboarding Funnel Event Endpoint (public — no auth required, fires from client)
+app.post('/api/analytics/funnel', express.json({ limit: '16kb' }), (req, res) => {
+    try {
+        const ip = req.ip || req.connection.remoteAddress;
+        const ua = req.headers['user-agent'] || 'unknown';
+        const { eventType, ...payload } = req.body || {};
+        if (!eventType) return res.status(400).json({ error: 'eventType required' });
+        logFunnelEvent(ip, ua, eventType, payload);
+        res.json({ ok: true });
+    } catch (error) {
+        console.error('Funnel event error:', error);
+        res.status(500).json({ error: 'Failed to log funnel event' });
     }
 });
 

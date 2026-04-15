@@ -45,22 +45,20 @@ function initAnalytics() {
     if (!fs.existsSync(analyticsFile)) {
         const initialData = {
             visitors: [],
-            pageViews: [], // SPA in-app page view events
+            pageViews: [],
+            funnelEvents: [],
             lastRotation: new Date().toISOString()
         };
         fs.writeFileSync(analyticsFile, JSON.stringify(initialData, null, 2));
         console.log('Analytics file initialized:', analyticsFile);
     } else {
-        // Migrate old format: ensure pageViews array exists
         try {
             const data = JSON.parse(fs.readFileSync(analyticsFile, 'utf8'));
-            if (!data.pageViews) {
-                data.pageViews = [];
-                fs.writeFileSync(analyticsFile, JSON.stringify(data, null, 2));
-            }
-        } catch (e) {
-            // ignore migration errors
-        }
+            let changed = false;
+            if (!data.pageViews)    { data.pageViews = [];    changed = true; }
+            if (!data.funnelEvents) { data.funnelEvents = []; changed = true; }
+            if (changed) fs.writeFileSync(analyticsFile, JSON.stringify(data, null, 2));
+        } catch (e) { /* ignore migration errors */ }
     }
 }
 
@@ -118,14 +116,13 @@ export function logPageView(ip, userAgent, page, referrer) {
             userAgent: ua,
             deviceType: detectDeviceType(ua),
             browser: detectBrowser(ua),
-            page, // e.g. 'home', 'about', 'contact', 'onboarding'
+            page,
             referrer: referrer || 'direct'
         };
 
         if (!data.pageViews) data.pageViews = [];
         data.pageViews.push(entry);
 
-        // Same safety cap
         if (data.pageViews.length > 500000) {
             data.pageViews = data.pageViews.slice(-500000);
         }
@@ -133,6 +130,35 @@ export function logPageView(ip, userAgent, page, referrer) {
         fs.writeFileSync(analyticsFile, JSON.stringify(data, null, 2));
     } catch (error) {
         console.error('Error logging page view:', error);
+    }
+}
+
+// Log an onboarding funnel step event
+export function logFunnelEvent(ip, userAgent, eventType, payload) {
+    try {
+        initAnalytics();
+        const data = JSON.parse(fs.readFileSync(analyticsFile, 'utf8'));
+
+        const ua = userAgent || 'unknown';
+        const entry = {
+            timestamp: new Date().toISOString(),
+            ip: ip || 'unknown',
+            deviceType: detectDeviceType(ua),
+            browser: detectBrowser(ua),
+            eventType,   // 'step_view' | 'submit'
+            ...payload   // step_number, step_name, method, selected_services, etc.
+        };
+
+        if (!data.funnelEvents) data.funnelEvents = [];
+        data.funnelEvents.push(entry);
+
+        if (data.funnelEvents.length > 100000) {
+            data.funnelEvents = data.funnelEvents.slice(-100000);
+        }
+
+        fs.writeFileSync(analyticsFile, JSON.stringify(data, null, 2));
+    } catch (error) {
+        console.error('Error logging funnel event:', error);
     }
 }
 
@@ -261,6 +287,44 @@ export function getAnalyticsStats({ startDate, endDate } = {}) {
         // Recent visitors: return ALL filtered visitors (client handles pagination)
         const recentVisitors = [...visitors].reverse();
 
+        // Onboarding funnel stats
+        const funnelEvents = data.funnelEvents || [];
+        const stepViews = funnelEvents.filter(e => e.eventType === 'step_view');
+        const submits   = funnelEvents.filter(e => e.eventType === 'submit');
+
+        // Unique sessions per step (by IP+day to avoid counting refreshes)
+        const uniquePerStep = {};
+        stepViews.forEach(e => {
+            const key = `${e.ip}_${e.timestamp.substring(0, 10)}_${e.step_number}`;
+            if (!uniquePerStep[e.step_number]) uniquePerStep[e.step_number] = new Set();
+            uniquePerStep[e.step_number].add(key);
+        });
+        const funnelSteps = [1, 2, 3, 4].map(n => ({
+            step: n,
+            name: { 1: 'The Spark', 2: 'The Scope', 3: 'The Details', 4: 'The Connection' }[n],
+            views: (uniquePerStep[n] || new Set()).size
+        }));
+
+        // Submit method breakdown
+        const submitMethods = {};
+        submits.forEach(e => {
+            const m = e.method || 'unknown';
+            submitMethods[m] = (submitMethods[m] || 0) + 1;
+        });
+
+        // Most selected services
+        const serviceCount = {};
+        stepViews
+            .filter(e => e.step_number === 2 && e.selected_services)
+            .forEach(e => {
+                e.selected_services.split(', ').filter(Boolean).forEach(s => {
+                    serviceCount[s] = (serviceCount[s] || 0) + 1;
+                });
+            });
+        const topServices = Object.entries(serviceCount)
+            .sort((a, b) => b[1] - a[1])
+            .map(([service, count]) => ({ service, count }));
+
         return {
             // Summary counts
             totalPageViews: visitors.length,
@@ -292,6 +356,12 @@ export function getAnalyticsStats({ startDate, endDate } = {}) {
             // Raw records (all filtered, paginated by client)
             recentVisitors,
             recentPageViews: [...pageViews].reverse(),
+
+            // Onboarding funnel
+            funnelSteps,
+            funnelSubmits: submits.length,
+            submitMethods,
+            topServices,
 
             // Security
             maliciousVisitors: maliciousVisitors.slice(-100).reverse(),

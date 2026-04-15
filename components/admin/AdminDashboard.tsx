@@ -1263,6 +1263,82 @@ const AdminDashboard: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
                                         </div>
                                     </div>
                                 </div>
+                                {/* ── Onboarding Funnel ─────────────────────────────────────── */}
+                                <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div>
+                                            <h4 className="text-lg font-bold text-slate-900">Onboarding Funnel</h4>
+                                            <p className="text-xs text-gray-400 mt-0.5">Unique step views · how far visitors go</p>
+                                        </div>
+                                        <span className="text-2xl">🎯</span>
+                                    </div>
+
+                                    {/* Step funnel bars */}
+                                    <div className="space-y-3 mb-6">
+                                        {(analytics.funnelSteps || []).map((s: any, idx: number) => {
+                                            const max = Math.max(...(analytics.funnelSteps || []).map((x: any) => x.views), 1);
+                                            const pct = max > 0 ? Math.round((s.views / max) * 100) : 0;
+                                            const colors = ['bg-blue-500', 'bg-indigo-500', 'bg-purple-500', 'bg-emerald-500'];
+                                            return (
+                                                <div key={idx}>
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <span className="text-sm font-semibold text-slate-700">Step {s.step} — {s.name}</span>
+                                                        <span className="text-sm font-bold text-slate-900">{s.views.toLocaleString()} <span className="text-xs font-normal text-gray-400">({pct}%)</span></span>
+                                                    </div>
+                                                    <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+                                                        <div
+                                                            className={`h-3 rounded-full transition-all duration-500 ${colors[idx]}`}
+                                                            style={{ width: `${pct}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-gray-100">
+                                        {/* Submit method breakdown */}
+                                        <div>
+                                            <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Submit Methods</h5>
+                                            {analytics.funnelSubmits === 0 ? (
+                                                <p className="text-sm text-gray-400">No submissions yet</p>
+                                            ) : (
+                                                <div className="space-y-2">
+                                                    {Object.entries(analytics.submitMethods || {}).map(([method, count]: any) => (
+                                                        <div key={method} className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                <span>{method === 'whatsapp' ? '💬' : method === 'gmail' ? '📧' : '✉️'}</span>
+                                                                <span className="text-sm font-medium text-gray-700 capitalize">{method.replace('_', ' ')}</span>
+                                                            </div>
+                                                            <span className="text-sm font-bold text-slate-900 bg-gray-100 px-2 py-0.5 rounded">{count}</span>
+                                                        </div>
+                                                    ))}
+                                                    <div className="pt-2 border-t border-gray-100 flex justify-between text-sm font-bold text-slate-900">
+                                                        <span>Total Submits</span>
+                                                        <span>{analytics.funnelSubmits}</span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Top services requested */}
+                                        <div>
+                                            <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Top Requested Services</h5>
+                                            {(!analytics.topServices || analytics.topServices.length === 0) ? (
+                                                <p className="text-sm text-gray-400">No data yet</p>
+                                            ) : (
+                                                <div className="space-y-2">
+                                                    {analytics.topServices.slice(0, 5).map((s: any) => (
+                                                        <div key={s.service} className="flex items-center justify-between">
+                                                            <span className="text-sm font-medium text-gray-700">{s.service}</span>
+                                                            <span className="text-sm font-bold text-slate-900 bg-gray-100 px-2 py-0.5 rounded">{s.count}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
 
                                 {/* Formatted Visitor Table */}
                                 <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
